@@ -1,3 +1,4 @@
+//David Castro
 // Code your design here
 module one_bit_full_adder(A, B, Cin, S,
 Cout);
