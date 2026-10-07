@@ -1,0 +1,58 @@
+// David Castro
+// Code your design here
+module block_CLA(A, B, Cin, S, Cout);
+input [3:0] A, B;
+input Cin;
+output [3:0] S;
+output Cout;
+
+// Your code
+  wire [3:0] P, G;
+  assign P[0] = A[0]^B[0];
+  assign G[0] = A[0]&B[0];
+  assign P[1] = A[1]^B[1];
+  assign G[1] = A[1]&B[1];
+  assign P[2] = A[2]^B[2];
+  assign G[2] = A[2]&B[2];
+  assign P[3] = A[3]^B[3];
+  assign G[3] = A[3]&B[3];
+  
+  wire c0, c1, c2, c3, c4, c5, c6, c7, c8, c9;
+  wire o1, o2, o3;
+  and g_and1(c1, P[3], P[2]);
+  and g_and2(c2, c1, P[1]);
+  and g_and3(c3, c2, G[0]);
+  
+  and g_and4(c4, P[3], G[2]);
+  and g_and5(c5, c1, G[1]);
+  and g_and6(c6, c1, P[1]);
+  and g_and7(c7, c6, P[0]);
+  and g_and8(c8, c7, Cin);
+  
+  or o_or1(o1, G[3], c4);
+  or o_or2(o2, o1, c5);
+  or o_or3(o3, o2, c3);
+  or o_or4(Cout, o3, c8);
+  
+  four_bit_RCA_RCS fa(.A(A), .B(B), .Cin(Cin), .S(S), .Cout(c9));
+endmodule
+
+module CLA(A, B, Cin, S, Cout);
+input [31:0] A, B;
+input Cin;
+output [31:0] S;
+output Cout;
+  
+  wire w1, w2, w3, w4, w5, w6, w7;
+
+  block_CLA b0(.A(A[3:0]), .B(B[3:0]), .Cin(Cin), .S(S[3:0]), .Cout(w1));
+
+  block_CLA b1(.A(A[7:4]), .B(B[7:4]), .Cin(w1), .S(S[7:4]), .Cout(w2));
+  block_CLA b2(.A(A[11:8]), .B(B[11:8]), .Cin(w2), .S(S[11:8]), .Cout(w3));
+  block_CLA b3(.A(A[15:12]), .B(B[15:12]), .Cin(w3), .S(S[15:12]), .Cout(w4));
+  block_CLA b4(.A(A[19:16]), .B(B[19:16]), .Cin(w4), .S(S[19:16]), .Cout(w5));
+  block_CLA b5(.A(A[23:20]), .B(B[23:20]), .Cin(w5), .S(S[23:20]), .Cout(w6));
+  block_CLA b6(.A(A[27:24]), .B(B[27:24]), .Cin(w6), .S(S[27:24]), .Cout(w7));
+  block_CLA b7(.A(A[31:28]), .B(B[31:28]), .Cin(w7), .S(S[31:28]), .Cout(Cout));
+  
+endmodule
