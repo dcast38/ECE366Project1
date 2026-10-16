@@ -1,6 +1,16 @@
+// Alex Aucapina
 // Code your design here
-module PPA(A, B, Cin, S, Cout);
+module prefix_cell (P_ik, G_ik, P_kj, G_kj, P_out, G_out);
+    input P_ik, G_ik, P_kj, G_kj;
+    output P_out, G_out;
+    
+    wire term;
+    and g1 (P_out, P_ik, P_kj);
+    and g2 (term, P_ik, G_kj);
+    or  g3 (G_out, G_ik, term);
+endmodule
 
+module PPA (A, B, Cin, S, Cout);
     input [15:0] A, B;
     input Cin;
     output [15:0] S;
@@ -8,154 +18,79 @@ module PPA(A, B, Cin, S, Cout);
 
     wire [15:0] P, G;
     genvar i;
-
     generate
         for (i = 0; i < 16; i = i + 1) begin : pre_comp
-            assign P[i] = A[i] | B[i];
-            assign G[i] = A[i] & B[i];
+            or  u_p (P[i], A[i], B[i]);
+            and u_g (G[i], A[i], B[i]);
         end
     endgenerate
 
-    wire P_0_neg1, G_0_neg1;
-    assign P_0_neg1 = P[0] & 1'b0;
-    assign G_0_neg1 = G[0] | (P[0] & Cin);
+    wire [15:0] P_l1, G_l1;
+    
+    prefix_cell c0  (.P_ik(P[0]), .G_ik(G[0]), .P_kj(1'b0), .G_kj(Cin),  .P_out(P_l1[0]), .G_out(G_l1[0]));
+    prefix_cell c1  (.P_ik(P[1]), .G_ik(G[1]), .P_kj(1'b0), .G_kj(G_l1[0]),.P_out(P_l1[1]), .G_out(G_l1[1]));
+    
+    generate
+        for (i = 2; i < 16; i = i + 1) begin : l1_cells
+            prefix_cell ci (.P_ik(P[i]), .G_ik(G[i]), .P_kj(P[i-1]), .G_kj(G[i-1]), .P_out(P_l1[i]), .G_out(G_l1[i]));
+        end
+    endgenerate
 
-    wire P_14_13, G_14_13, P_12_11, G_12_11, P_10_9,
-         G_10_9, P_8_7, G_8_7;
-    wire P_6_5, G_6_5, P_4_3, G_4_3, P_2_1, G_2_1;
+    wire [15:0] P_l2, G_l2;
+    assign P_l2[0] = P_l1[0]; assign G_l2[0] = G_l1[0];
+    assign P_l2[1] = P_l1[1]; assign G_l2[1] = G_l1[1];
+    assign P_l2[2] = P_l1[2]; assign G_l2[2] = G_l1[2];
 
-    assign P_14_13 = P[14] & P[13];
-    assign G_14_13 = G[14] | (P[14] & G[13]);
+    prefix_cell c2_3  (.P_ik(P_l1[3]),  .G_ik(G_l1[3]),  .P_kj(P_l1[1]),  .G_kj(G_l1[1]),  .P_out(P_l2[3]),  .G_out(G_l2[3]));
+    prefix_cell c2_4  (.P_ik(P_l1[4]),  .G_ik(G_l1[4]),  .P_kj(P_l1[2]),  .G_kj(G_l1[2]),  .P_out(P_l2[4]),  .G_out(G_l2[4]));
+    prefix_cell c2_5  (.P_ik(P_l1[5]),  .G_ik(G_l1[5]),  .P_kj(P_l1[3]),  .G_kj(G_l1[3]),  .P_out(P_l2[5]),  .G_out(G_l2[5]));
+    prefix_cell c2_6  (.P_ik(P_l1[6]),  .G_ik(G_l1[6]),  .P_kj(P_l1[4]),  .G_kj(G_l1[4]),  .P_out(P_l2[6]),  .G_out(G_l2[6]));
+    prefix_cell c2_7  (.P_ik(P_l1[7]),  .G_ik(G_l1[7]),  .P_kj(P_l1[5]),  .G_kj(G_l1[5]),  .P_out(P_l2[7]),  .G_out(G_l2[7]));
+    prefix_cell c2_8  (.P_ik(P_l1[8]),  .G_ik(G_l1[8]),  .P_kj(P_l1[6]),  .G_kj(G_l1[6]),  .P_out(P_l2[8]),  .G_out(G_l2[8]));
+    prefix_cell c2_9  (.P_ik(P_l1[9]),  .G_ik(G_l1[9]),  .P_kj(P_l1[7]),  .G_kj(G_l1[7]),  .P_out(P_l2[9]),  .G_out(G_l2[9]));
+    prefix_cell c2_10 (.P_ik(P_l1[10]), .G_ik(G_l1[10]), .P_kj(P_l1[8]),  .G_kj(G_l1[8]),  .P_out(P_l2[10]), .G_out(G_l2[10]));
+    prefix_cell c2_11 (.P_ik(P_l1[11]), .G_ik(G_l1[11]), .P_kj(P_l1[9]),  .G_kj(G_l1[9]),  .P_out(P_l2[11]), .G_out(G_l2[11]));
+    prefix_cell c2_12 (.P_ik(P_l1[12]), .G_ik(G_l1[12]), .P_kj(P_l1[10]), .G_kj(G_l1[10]), .P_out(P_l2[12]), .G_out(G_l2[12]));
+    prefix_cell c2_13 (.P_ik(P_l1[13]), .G_ik(G_l1[13]), .P_kj(P_l1[11]), .G_kj(G_l1[11]), .P_out(P_l2[13]), .G_out(G_l2[13]));
+    prefix_cell c2_14 (.P_ik(P_l1[14]), .G_ik(G_l1[14]), .P_kj(P_l1[12]), .G_kj(G_l1[12]), .P_out(P_l2[14]), .G_out(G_l2[14]));
+    prefix_cell c2_15 (.P_ik(P_l1[15]), .G_ik(G_l1[15]), .P_kj(P_l1[13]), .G_kj(G_l1[13]), .P_out(P_l2[15]), .G_out(G_l2[15]));
 
-    assign P_12_11 = P[12] & P[11];
-    assign G_12_11 = G[12] | (P[12] & G[11]);
+    wire [15:0] G_final;
+    assign G_final[0] = G_l2[0];
+    assign G_final[1] = G_l2[1];
+    assign G_final[2] = G_l2[2];
+    assign G_final[3] = G_l2[3];
 
-    assign P_10_9 = P[10] & P[9];
-    assign G_10_9 = G[10] | (P[10] & G[9]);
+    prefix_cell c3_4  (.P_ik(P_l2[4]),  .G_ik(G_l2[4]),  .P_kj(P_l2[3]),  .G_kj(G_l2[3]),  .P_out(), .G_out(G_final[4]));
+    prefix_cell c3_5  (.P_ik(P_l2[5]),  .G_ik(G_l2[5]),  .P_kj(P_l2[3]),  .G_kj(G_l2[3]),  .P_out(), .G_out(G_final[5]));
+    prefix_cell c3_6  (.P_ik(P_l2[6]),  .G_ik(G_l2[6]),  .P_kj(P_l2[3]),  .G_kj(G_l2[3]),  .P_out(), .G_out(G_final[6]));
+    prefix_cell c3_7  (.P_ik(P_l2[7]),  .G_ik(G_l2[7]),  .P_kj(P_l2[3]),  .G_kj(G_l2[3]),  .P_out(), .G_out(G_final[7]));
+    prefix_cell c3_8  (.P_ik(P_l2[8]),  .G_ik(G_l2[8]),  .P_kj(P_l2[7]),  .G_kj(G_l2[7]),  .P_out(), .G_out(G_final[8]));
+    prefix_cell c3_9  (.P_ik(P_l2[9]),  .G_ik(G_l2[9]),  .P_kj(P_l2[7]),  .G_kj(G_l2[7]),  .P_out(), .G_out(G_final[9]));
+    prefix_cell c3_10 (.P_ik(P_l2[10]), .G_ik(G_l2[10]), .P_kj(P_l2[7]),  .G_kj(G_l2[7]),  .P_out(), .G_out(G_final[10]));
+    prefix_cell c3_11 (.P_ik(P_l2[11]), .G_ik(G_l2[11]), .P_kj(P_l2[7]),  .G_kj(G_l2[7]),  .P_out(), .G_out(G_final[11]));
+    prefix_cell c3_12 (.P_ik(P_l2[12]), .G_ik(G_l2[12]), .P_kj(P_l2[7]),  .G_kj(G_l2[7]),  .P_out(), .G_out(G_final[12]));
+    prefix_cell c3_13 (.P_ik(P_l2[13]), .G_ik(G_l2[13]), .P_kj(P_l2[7]),  .G_kj(G_l2[7]),  .P_out(), .G_out(G_final[13]));
+    prefix_cell c3_14 (.P_ik(P_l2[14]), .G_ik(G_l2[14]), .P_kj(P_l2[7]),  .G_kj(G_l2[7]),  .P_out(), .G_out(G_final[14]));
+    prefix_cell c3_15 (.P_ik(P_l2[15]), .G_ik(G_l2[15]), .P_kj(P_l2[7]),  .G_kj(G_l2[7]),  .P_out(), .G_out(G_final[15]));
 
-    assign P_8_7 = P[8] & P[7];
-    assign G_8_7 = G[8] | (P[8] & G[7]);
+    assign S[0] = Cin ^ (A[0] ^ B[0]);
+    assign S[1] = G_final[0] ^ (A[1] ^ B[1]);
+    assign S[2] = G_final[1] ^ (A[2] ^ B[2]);
+    assign S[3] = G_final[2] ^ (A[3] ^ B[3]);
+    assign S[4] = G_final[3] ^ (A[4] ^ B[4]);
+    assign S[5] = G_final[4] ^ (A[5] ^ B[5]);
+    assign S[6] = G_final[5] ^ (A[6] ^ B[6]);
+    assign S[7] = G_final[6] ^ (A[7] ^ B[7]);
+    assign S[8] = G_final[7] ^ (A[8] ^ B[8]);
+    assign S[9] = G_final[8] ^ (A[9] ^ B[9]);
+    assign S[10] = G_final[9] ^ (A[10] ^ B[10]);
+    assign S[11] = G_final[10] ^ (A[11] ^ B[11]);
+    assign S[12] = G_final[11] ^ (A[12] ^ B[12]);
+    assign S[13] = G_final[12] ^ (A[13] ^ B[13]);
+    assign S[14] = G_final[13] ^ (A[14] ^ B[14]);
+    assign S[15] = G_final[14] ^ (A[15] ^ B[15]);
 
-    assign P_6_5 = P[6] & P[5];
-    assign G_6_5 = G[6] | (P[6] & G[5]);
-
-    assign P_4_3 = P[4] & P[3];
-    assign G_4_3 = G[4] | (P[4] & G[3]);
-
-    assign P_2_1 = P[2] & P[1];
-    assign G_2_1 = G[2] | (P[2] & G[1]);
-
-    wire P_14_11, G_14_11, P_13_11, G_13_11;
-    wire P_10_7, G_10_7, P_9_7, G_9_7;
-    wire P_6_3, G_6_3, P_5_3, G_5_3;
-    wire P_2_neg1, G_2_neg1, P_1_neg1, G_1_neg1;
-
-    assign P_14_11 = P_14_13 & P_12_11;
-    assign G_14_11 = G_14_13 | (P_14_13 & G_12_11);
-
-    assign P_13_11 = P[13] & P_12_11;
-    assign G_13_11 = G[13] | (P[13] & G_12_11);
-
-    assign P_10_7 = P_10_9 & P_8_7;
-    assign G_10_7 = G_10_9 | (P_10_9 & G_8_7);
-
-    assign P_9_7 = P[9] & P_8_7;
-    assign G_9_7 = G[9] | (P[9] & G_8_7);
-
-    assign P_6_3 = P_6_5 & P_4_3;
-    assign G_6_3 = G_6_5 | (P_6_5 & G_4_3);
-
-    assign P_5_3 = P[5] & P_4_3;
-    assign G_5_3 = G[5] | (P[5] & G_4_3);
-
-    assign P_2_neg1 = P_2_1 & P_0_neg1;
-    assign G_2_neg1 = G_2_1 | (P_2_1 & G_0_neg1);
-
-    assign P_1_neg1 = P[1] & P_0_neg1;
-    assign G_1_neg1 = G[1] | (P[1] & G_0_neg1);
-
-    wire P_14_7, G_14_7, P_13_7, G_13_7, P_12_7, G_12_7,
-         P_11_7, G_11_7;
-
-    wire P_6_neg1, G_6_neg1, P_5_neg1, G_5_neg1, P_4_neg1,
-         G_4_neg1, P_3_neg1, G_3_neg1;
-
-    assign P_14_7 = P_14_11 & P_10_7;
-    assign G_14_7 = G_14_11 | (P_14_11 & G_10_7);
-
-    assign P_13_7 = P_13_11 & P_10_7;
-    assign G_13_7 = G_13_11 | (P_13_11 & G_10_7);
-
-    assign P_12_7 = P_12_11 & P_10_7;
-    assign G_12_7 = G_12_11 | (P_12_11 & G_10_7);
-
-    assign P_11_7 = P[11] & P_10_7;
-    assign G_11_7 = G[11] | (P[11] & G_10_7);
-
-    assign P_6_neg1 = P_6_3 & P_2_neg1;
-    assign G_6_neg1 = G_6_3 | (P_6_3 & G_2_neg1);
-
-    assign P_5_neg1 = P_5_3 & P_2_neg1;
-    assign G_5_neg1 = G_5_3 | (P_5_3 & G_2_neg1);
-
-    assign P_4_neg1 = P[4] & P_2_neg1;
-    assign G_4_neg1 = G[4] | (P[4] & G_2_neg1);
-
-    assign P_3_neg1 = P[3] & P_2_neg1;
-    assign G_3_neg1 = G[3] | (P[3] & G_2_neg1);
-
-    wire P_14_neg1, G_14_neg1, P_13_neg1, G_13_neg1,
-         P_12_neg1, G_12_neg1, P_11_neg1, G_11_neg1;
-
-    wire P_10_neg1, G_10_neg1, P_9_neg1, G_9_neg1,
-         P_8_neg1, G_8_neg1, P_7_neg1, G_7_neg1;
-
-    wire P_15_neg1, G_15_neg1;
-
-    assign P_14_neg1 = P_14_7 & P_6_neg1;
-    assign G_14_neg1 = G_14_7 | (P_14_7 & G_6_neg1);
-
-    assign P_13_neg1 = P_13_7 & P_6_neg1;
-    assign G_13_neg1 = G_13_7 | (P_13_7 & G_6_neg1);
-
-    assign P_12_neg1 = P_12_7 & P_6_neg1;
-    assign G_12_neg1 = G_12_7 | (P_12_7 & G_6_neg1);
-
-    assign P_11_neg1 = P_11_7 & P_6_neg1;
-    assign G_11_neg1 = G_11_7 | (P_11_7 & G_6_neg1);
-
-    assign P_10_neg1 = P_10_7 & P_6_neg1;
-    assign G_10_neg1 = G_10_7 | (P_10_7 & G_6_neg1);
-
-    assign P_9_neg1 = P_9_7 & P_6_neg1;
-    assign G_9_neg1 = G_9_7 | (P_9_7 & G_6_neg1);
-
-    assign P_8_neg1 = P_8_7 & P_6_neg1;
-    assign G_8_neg1 = G_8_7 | (P_8_7 & G_6_neg1);
-
-    assign P_7_neg1 = P[7] & P_6_neg1;
-    assign G_7_neg1 = G[7] | (P[7] & G_6_neg1);
-
-    assign P_15_neg1 = P[15] & P_14_neg1;
-    assign G_15_neg1 = G[15] | (P[15] & G_14_neg1);
-
-    assign Cout = G_15_neg1;
-
-    assign S[0]  = G_0_neg1  ^ (A[0] ^ B[0]);
-    assign S[1]  = G_1_neg1  ^ (A[1] ^ B[1]);
-    assign S[2]  = G_2_neg1  ^ (A[2] ^ B[2]);
-    assign S[3]  = G_3_neg1  ^ (A[3] ^ B[3]);
-    assign S[4]  = G_4_neg1  ^ (A[4] ^ B[4]);
-    assign S[5]  = G_5_neg1  ^ (A[5] ^ B[5]);
-    assign S[6]  = G_6_neg1  ^ (A[6] ^ B[6]);
-    assign S[7]  = G_7_neg1  ^ (A[7] ^ B[7]);
-    assign S[8]  = G_8_neg1  ^ (A[8] ^ B[8]);
-    assign S[9]  = G_9_neg1  ^ (A[9] ^ B[9]);
-    assign S[10] = G_10_neg1 ^ (A[10] ^ B[10]);
-    assign S[11] = G_11_neg1 ^ (A[11] ^ B[11]);
-    assign S[12] = G_12_neg1 ^ (A[12] ^ B[12]);
-    assign S[13] = G_13_neg1 ^ (A[13] ^ B[13]);
-    assign S[14] = G_14_neg1 ^ (A[14] ^ B[14]);
-    assign S[15] = G_15_neg1 ^ (A[15] ^ B[15]);
+    assign Cout = G_final[15];
 
 endmodule
