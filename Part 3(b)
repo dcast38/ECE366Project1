@@ -6,49 +6,42 @@ module tb_PPA;
     wire [15:0] S;
     wire Cout;
   
-    // Instantiate the 16-bit Parallel Prefix Adder (PPA)
     PPA dut(.A(A), .B(B), .Cin(Cin), .S(S), .Cout(Cout));
   
     initial begin
         $dumpfile("dump.vcd");
         $dumpvars(0, tb_PPA);
         
-        // 1. Unsigned addition
         A = 16'd4;
         B = 16'd3;
         Cin = 0;
         #10;
         $display("A=%h B=%h Cin=%b | S=%h Cout=%b", A, B, Cin, S, Cout);
 
-        // 2. Unsigned addition (larger values)
         A = 16'd9;
         B = 16'd5;
         Cin = 0;
         #10;
         $display("A=%h B=%h Cin=%b | S=%h Cout=%b", A, B, Cin, S, Cout);
 
-        // 3. Signed addition involving a negative operand (-3 + 5)
         A = 16'hFFFD; // -3 in 16-bit two's complement
         B = 16'd5;
         Cin = 0;
         #10;
         $display("A=%h B=%h Cin=%b | S=%h Cout=%b", A, B, Cin, S, Cout);
 
-        // 4. Signed addition involving a negative operand (-3 + 2)
         A = 16'hFFFD; // -3 in 16-bit two's complement
         B = 16'd2;
         Cin = 0;
         #10;
         $display("A=%h B=%h Cin=%b | S=%h Cout=%b", A, B, Cin, S, Cout);
 
-        // 5. Case producing a carry-out (FFFF + 0001)
         A = 16'hFFFF;
         B = 16'h0001;
         Cin = 0;
         #10;
         $display("A=%h B=%h Cin=%b | S=%h Cout=%b", A, B, Cin, S, Cout);
 
-        // 6. Additional test case
         A = 16'h00FF;
         B = 16'h0001;
         Cin = 0;
